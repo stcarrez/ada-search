@@ -16,7 +16,7 @@ build-test::	setup
 
 # Build and run the unit tests
 test:	build
-	# bin/search_harness -xml search-aunit.xml
+	bin/search_harness -xml search-aunit.xml
 
 install-samples:
 	$(MKDIR) -p $(samplesdir)/samples
