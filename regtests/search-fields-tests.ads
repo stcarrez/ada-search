@@ -25,4 +25,6 @@ package Search.Fields.Tests is
 
    procedure Test_Create_Field (T : in out Test);
 
+   procedure Test_Stream_Field (T : in out Test);
+
 end Search.Fields.Tests;
