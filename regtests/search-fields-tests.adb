@@ -31,11 +31,27 @@ package body Search.Fields.Tests is
    procedure Test_Create_Field (T : in out Test) is
       Field  : Field_Type;
    begin
+      --  F_TOKEN field
       Field := Create ("author", "Tolkien");
 
       T.Assert_Equals ("author", Get_Name (Field), "Get_Name invalid");
       T.Assert (Is_Indexable (Field), "Is_Indexable failed");
       T.Assert (not Is_Tokenized (Field), "Is_Tokenized failed");
+
+      --  F_META field
+      Field := Create ("ident", "123", F_META);
+
+      T.Assert_Equals ("ident", Get_Name (Field), "Get_Name invalid");
+      T.Assert (not Is_Indexable (Field), "Is_Indexable failed");
+      T.Assert (not Is_Tokenized (Field), "Is_Tokenized failed");
+
+      --  F_CONTENT field
+      Field := Create ("title", "Lord of the Rings", F_CONTENT);
+
+      T.Assert_Equals ("title", Get_Name (Field), "Get_Name invalid");
+      T.Assert (Is_Indexable (Field), "Is_Indexable failed");
+      T.Assert (Is_Tokenized (Field), "Is_Tokenized failed");
+
    end Test_Create_Field;
 
 end Search.Fields.Tests;
