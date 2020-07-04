@@ -15,12 +15,13 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
+with Util.Streams;
 
 --  == Fields ==
 --  The field describe an element of a document that can be indexed.
 package Search.Fields is
 
-   type Field_Kind is (F_TOKEN, F_PATH, F_CONTENT);
+   type Field_Kind is (F_META, F_TOKEN, F_PATH, F_CONTENT);
 
    type Field_Type is private;
 
@@ -37,6 +38,11 @@ package Search.Fields is
    function Create (Name  : in String;
                     Value : in String;
                     Kind  : in Field_Kind := F_TOKEN) return Field_Type;
+
+   --  Stream the content of the field to the procedure.
+   procedure Stream (Field : in Field_Type;
+                     Into  : not null access
+                       procedure (S : in out Util.Streams.Input_Stream'Class));
 
 private
 
