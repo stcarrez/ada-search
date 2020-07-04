@@ -15,7 +15,10 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
+with Ada.Streams.Stream_IO;
 
+with Util.Streams.Files;
+with Util.Streams.Buffered;
 package body Search.Fields is
 
    --  ------------------------------
@@ -31,7 +34,7 @@ package body Search.Fields is
    --  ------------------------------
    function Is_Indexable (Field : in Field_Type) return Boolean is
    begin
-      return Field.Kind = F_TOKEN;
+      return Field.Kind = F_TOKEN or Field.Kind = F_PATH or Field.Kind = F_CONTENT;
    end Is_Indexable;
 
    --  ------------------------------
@@ -39,7 +42,7 @@ package body Search.Fields is
    --  ------------------------------
    function Is_Tokenized (Field : in Field_Type) return Boolean is
    begin
-      return Field.Kind = F_CONTENT;
+      return Field.Kind = F_CONTENT or Field.Kind = F_PATH;
    end Is_Tokenized;
 
    --  ------------------------------
@@ -53,5 +56,36 @@ package body Search.Fields is
                           Name  => To_UString (Name),
                           Value => To_UString (Value));
    end Create;
+
+   --  ------------------------------
+   --  Stream the content of the field to the procedure.
+   --  ------------------------------
+   procedure Stream (Field : in Field_Type;
+                     Into  : not null access
+                       procedure (S : in out Util.Streams.Input_Stream'Class)) is
+   begin
+      case Field.Kind is
+         when F_PATH =>
+            declare
+               Stream : Util.Streams.Files.File_Stream;
+            begin
+               Stream.Open (Ada.Streams.Stream_IO.In_File, To_String (Field.Value));
+               Into (Stream);
+               Stream.Close;
+            end;
+
+         when F_CONTENT =>
+            declare
+               Stream : Util.Streams.Buffered.Input_Buffer_Stream;
+            begin
+               Stream.Initialize (To_String (Field.Value));
+               Into (Stream);
+            end;
+
+         when others =>
+            null;
+
+      end case;
+   end Stream;
 
 end Search.Fields;
