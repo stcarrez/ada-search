@@ -15,8 +15,14 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
+with Ada.Strings.Unbounded;
 package Search is
 
-   pragma Pure;
+   use Ada.Strings.Unbounded;
+
+   subtype UString is Unbounded_String;
+
+   function To_UString (S : String) return UString
+     renames To_Unbounded_String;
 
 end Search;
