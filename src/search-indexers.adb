@@ -22,7 +22,7 @@ package body Search.Indexers is
    --  Add the field in the index.  The field content is not tokenized.
    --  ------------------------------
    procedure Add_Field (Indexer  : in out Indexer_Type;
-                        Document : in Search.Documents.Document_Type'Class;
+                        Document : in out Search.Documents.Document_Type'Class;
                         Field    : in Search.Fields.Field_Type) is
    begin
       null;
@@ -31,25 +31,33 @@ package body Search.Indexers is
    --  ------------------------------
    --  Add the field in the index and use the analyzer for its analysis.
    --  ------------------------------
-   procedure Add_Field (Indexer  : in out Indexer_Type;
-                        Document : in Search.Documents.Document_Type'Class;
-                        Field    : in Search.Fields.Field_Type;
-                        Analyzer : in out Search.Analyzers.Analyzer_Type'Class) is
+   procedure Add_Field (Indexer   : in out Indexer_Type;
+                        Document  : in out Search.Documents.Document_Type'Class;
+                        Field     : in Search.Fields.Field_Type;
+                        Analyzer  : in out Search.Analyzers.Analyzer_Type'Class;
+                        Tokenizer : in out Search.Tokenizers.Tokenizer_Type'Class) is
+
+      procedure Consume (Token : in String) is
+      begin
+         Indexer_Type'Class (Indexer).Add_Token (Document, Field, Token);
+      end Consume;
+
    begin
-      null;
+      Analyzer.Analyze (Tokenizer, Field, Consume'Access);
    end Add_Field;
 
    --  ------------------------------
    --  Add the document in the index by storing and indexing all indexable fields.
    --  ------------------------------
-   procedure Add_Document (Indexer  : in out Indexer_Type;
-                           Document : in Search.Documents.Document_Type'Class;
-                           Analyzer : in out Search.Analyzers.Analyzer_Type'Class) is
+   procedure Add_Document (Indexer   : in out Indexer_Type;
+                           Document  : in out Search.Documents.Document_Type'Class;
+                           Analyzer  : in out Search.Analyzers.Analyzer_Type'Class;
+                           Tokenizer : in out Search.Tokenizers.Tokenizer_Type'Class) is
       procedure Index_Field (Field : in Search.Fields.Field_Type);
 
       procedure Index_Field (Field : in Search.Fields.Field_Type) is
       begin
-         Indexer.Add_Field (Document, Field, Analyzer);
+         Indexer.Add_Field (Document, Field, Analyzer, Tokenizer);
       end Index_Field;
 
    begin
