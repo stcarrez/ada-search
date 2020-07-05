@@ -19,11 +19,12 @@ with Ada.Characters.Handling;
 package body Search.Filters.Lowercase is
 
    overriding
-   procedure Push_Token (Filter : in out Filter_Type;
-                         Token  : in String) is
+   procedure Push_Token (Filter   : in out Filter_Type;
+                         Token    : in String;
+                         Consumer : not null access procedure (Token : in String)) is
       use Ada.Characters.Handling;
    begin
-      Search.Filters.Filter_Type (Filter).Push_Token (To_Lower (Token));
+      Search.Filters.Filter_Type (Filter).Push_Token (To_Lower (Token), Consumer);
    end Push_Token;
 
 end Search.Filters.Lowercase;
