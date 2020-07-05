@@ -20,8 +20,8 @@ package body Search.Analyzers.French is
 
    procedure Initialize (Analyzer : in out Analyzer_Type) is
    begin
-      Analyzer.Filters.Add_Filter (Analyzer.Lowercase'Unchecked_access);
-      Analyzer.Filters.Add_Filter (Analyzer.Stemmer'Unchecked_access);
+      Analyzer.Filters.Add_Filter (Analyzer.Lowercase'Unchecked_Access);
+      Analyzer.Filters.Add_Filter (Analyzer.Stemmer'Unchecked_Access);
    end Initialize;
 
 end Search.Analyzers.French;
