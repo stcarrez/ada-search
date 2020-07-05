@@ -16,7 +16,6 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 
-with Util.Tests;
 with Util.Test_Caller;
 with Search.Tokens.Factories.Default;
 package body Search.Tokens.Tests is
