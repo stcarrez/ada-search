@@ -21,7 +21,8 @@ package Search.Filters.Lowercase is
    type Filter_Type is new Search.Filters.Filter_Type with null record;
 
    overriding
-   procedure Push_Token (Filter : in out Filter_Type;
-                         Token  : in String);
+   procedure Push_Token (Filter   : in out Filter_Type;
+                         Token    : in String;
+                         Consumer : not null access procedure (Token : in String));
 
 end Search.Filters.Lowercase;
