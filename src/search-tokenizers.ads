@@ -27,14 +27,21 @@ package Search.Tokenizers is
 
    type Consumer_Type is limited Interface;
 
-   procedure Push_Token (Consumer : in out Consumer_Type;
-                         Token    : in String) is abstract;
+   procedure Push_Token (Filter   : in out Consumer_Type;
+                         Token    : in String;
+                         Consumer : not null
+                           access procedure (Token : in String)) is abstract;
 
    type Tokenizer_Type is limited new Ada.Finalization.Limited_Controlled with private;
 
+   overriding
+   procedure Initialize (Lexer : in out Tokenizer_Type);
+
    procedure Parse (Lexer    : in out Tokenizer_Type;
                     Stream   : in out Util.Streams.Input_Stream'Class;
-                    Consumer : in out Consumer_Type'Class);
+                    Filter   : in out Consumer_Type'Class;
+                    Consumer : not null
+                      access procedure (Token : in String));
 
    procedure Fill (Lexer  : in out Tokenizer_Type;
                    Stream : in out Util.Streams.Input_Stream'Class);
@@ -49,11 +56,15 @@ private
 
    subtype Lexer_Offset is Ada.Streams.Stream_Element_Offset;
 
+   type Element_Bitmap is array (Ada.Streams.Stream_Element) of Boolean with Pack;
+   type Element_Bitmap_Access is access all Element_Bitmap;
+
    type Tokenizer_Type is limited new Ada.Finalization.Limited_Controlled with record
-      Pos    : Lexer_Offset := 0;
-      Last   : Lexer_Offset := 0;
-      Buffer : Ada.Streams.Stream_Element_Array (1 .. 1024);
-      Text   : Util.Strings.Builders.Builder (128);
+      Separators : Element_Bitmap;
+      Pos        : Lexer_Offset := 0;
+      Last       : Lexer_Offset := 0;
+      Buffer     : Ada.Streams.Stream_Element_Array (1 .. 1024);
+      Text       : Util.Strings.Builders.Builder (128);
    end record;
 
 end Search.Tokenizers;
