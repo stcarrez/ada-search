@@ -16,7 +16,6 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 
-with Util.Tests;
 with Util.Test_Caller;
 package body Search.Fields.Tests is
 
@@ -26,6 +25,8 @@ package body Search.Fields.Tests is
    begin
       Caller.Add_Test (Suite, "Test Search.Fields.Create",
                        Test_Create_Field'Access);
+      Caller.Add_Test (Suite, "Test Search.Fields.Stream",
+                       Test_Stream_Field'Access);
    end Add_Tests;
 
    procedure Test_Create_Field (T : in out Test) is
@@ -53,5 +54,28 @@ package body Search.Fields.Tests is
       T.Assert (Is_Tokenized (Field), "Is_Tokenized failed");
 
    end Test_Create_Field;
+
+   procedure Test_Stream_Field (T     : in out Test;
+                                Field : in Field_Type) is
+      procedure Read (Stream : in out Util.Streams.Input_Stream'Class);
+
+      procedure Read (Stream : in out Util.Streams.Input_Stream'Class) is
+         Data : Ada.Streams.Stream_Element_Array (1 .. 100);
+         Last : Ada.Streams.Stream_Element_Offset;
+      begin
+         Stream.Read (Data, Last);
+         Util.Tests.Assert_Equals (T, Length (Field.Value), Natural (Last), "Invalid length");
+      end Read;
+
+   begin
+      Stream (Field, Read'Access);
+   end Test_Stream_Field;
+
+   procedure Test_Stream_Field (T : in out Test) is
+      Field  : Field_Type;
+   begin
+      Field := Create ("test", "some content");
+      Test_Stream_Field (T, Field);
+   end Test_Stream_Field;
 
 end Search.Fields.Tests;
