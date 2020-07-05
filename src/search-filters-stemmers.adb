@@ -19,15 +19,16 @@
 package body Search.Filters.Stemmers is
 
    overriding
-   procedure Push_Token (Filter : in out Filter_Type;
-                         Token  : in String) is
+   procedure Push_Token (Filter   : in out Filter_Type;
+                         Token    : in String;
+                         Consumer : not null access procedure (Token : in String)) is
       Result : Boolean;
    begin
       Filter.Context.Stem_Word (Token, Result);
       if not Result then
-         Search.Filters.Filter_Type (Filter).Push_Token (Token);
+         Search.Filters.Filter_Type (Filter).Push_Token (Token, Consumer);
       else
-         Search.Filters.Filter_Type (Filter).Push_Token (Filter.Context.Get_Result);
+         Search.Filters.Filter_Type (Filter).Push_Token (Filter.Context.Get_Result, Consumer);
       end if;
    end Push_Token;
 
