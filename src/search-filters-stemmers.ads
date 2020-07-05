@@ -26,7 +26,8 @@ package Search.Filters.Stemmers is
    end record;
 
    overriding
-   procedure Push_Token (Filter : in out Filter_Type;
-                         Token  : in String);
+   procedure Push_Token (Filter   : in out Filter_Type;
+                         Token    : in String;
+                         Consumer : not null access procedure (Token : in String));
 
 end Search.Filters.Stemmers;
