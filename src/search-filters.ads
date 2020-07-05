@@ -29,12 +29,13 @@ with Search.Tokenizers;
 package Search.Filters is
 
    type Filter_Type is abstract limited new Ada.Finalization.Limited_Controlled
-     and Search.Tokenizers.Consumer_Type With private;
+     and Search.Tokenizers.Consumer_Type with private;
    type Filter_Type_Access is access all Filter_Type'Class;
 
    overriding
-   procedure Push_Token (Chain  : in out Filter_Type;
-                         Token  : in String);
+   procedure Push_Token (Chain    : in out Filter_Type;
+                         Token    : in String;
+                         Consumer : not null access procedure (Token : in String));
 
    type Filter_Chain is new Filter_Type with private;
 
@@ -44,7 +45,7 @@ package Search.Filters is
 private
 
    type Filter_Type is abstract limited new Ada.Finalization.Limited_Controlled
-     and Search.Tokenizers.Consumer_Type With record
+     and Search.Tokenizers.Consumer_Type with record
       Next     : Filter_Type_Access;
    end record;
 
