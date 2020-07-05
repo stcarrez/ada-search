@@ -18,6 +18,7 @@
 with Ada.Finalization;
 
 with Search.Fields;
+with Search.Tokenizers;
 with Search.Documents;
 with Search.Analyzers;
 package Search.Indexers is
@@ -26,19 +27,26 @@ package Search.Indexers is
 
    --  Add the field in the index.  The field content is not tokenized.
    procedure Add_Field (Indexer  : in out Indexer_Type;
-                        Document : in Search.Documents.Document_Type'Class;
+                        Document : in out Search.Documents.Document_Type'Class;
                         Field    : in Search.Fields.Field_Type);
 
    --  Add the field in the index and use the analyzer for its analysis.
-   procedure Add_Field (Indexer  : in out Indexer_Type;
-                        Document : in Search.Documents.Document_Type'Class;
-                        Field    : in Search.Fields.Field_Type;
-                        Analyzer : in out Search.Analyzers.Analyzer_Type'Class);
+   procedure Add_Field (Indexer   : in out Indexer_Type;
+                        Document  : in out Search.Documents.Document_Type'Class;
+                        Field     : in Search.Fields.Field_Type;
+                        Analyzer  : in out Search.Analyzers.Analyzer_Type'Class;
+                        Tokenizer : in out Search.Tokenizers.Tokenizer_Type'Class);
 
    --  Add the document in the index by storing and indexing all indexable fields.
-   procedure Add_Document (Indexer  : in out Indexer_Type;
-                           Document : in Search.Documents.Document_Type'Class;
-                           Analyzer : in out Search.Analyzers.Analyzer_Type'Class);
+   procedure Add_Document (Indexer   : in out Indexer_Type;
+                           Document  : in out Search.Documents.Document_Type'Class;
+                           Analyzer  : in out Search.Analyzers.Analyzer_Type'Class;
+                           Tokenizer : in out Search.Tokenizers.Tokenizer_Type'Class);
+
+   procedure Add_Token (Indexer  : in out Indexer_Type;
+                        Document : in out Search.Documents.Document_Type'Class;
+                        Field    : in Search.Fields.Field_Type;
+                        Token    : in String) is null;
 
 private
 
