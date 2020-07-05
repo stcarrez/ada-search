@@ -17,7 +17,6 @@
 -----------------------------------------------------------------------
 
 with Util.Tests;
-with Util.Properties;
 package Search.Testsuite is
 
    function Suite return Util.Tests.Access_Test_Suite;
