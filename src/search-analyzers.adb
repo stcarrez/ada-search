@@ -17,11 +17,27 @@
 -----------------------------------------------------------------------
 package body Search.Analyzers is
 
-   procedure Analyze (Analyzer : in out Analyzer_Type;
+   procedure Analyze (Analyzer  : in out Analyzer_Type;
                       Tokenizer : in out Search.Tokenizers.Tokenizer_Type'Class;
-                      Stream   : in out Util.Streams.Input_Stream'Class) is
+                      Stream    : in out Util.Streams.Input_Stream'Class;
+                      Consume   : not null access procedure (Token : in String)) is
    begin
-      Tokenizer.Parse (Stream, Analyzer.Filters);
+      Tokenizer.Parse (Stream, Analyzer.Filters, Consume);
+   end Analyze;
+
+   procedure Analyze (Analyzer  : in out Analyzer_Type;
+                      Tokenizer : in out Search.Tokenizers.Tokenizer_Type'Class;
+                      Field     : in Search.Fields.Field_Type;
+                      Consume   : not null access procedure (Token : in String)) is
+      procedure Reader (Stream : in out Util.Streams.Input_Stream'Class);
+
+      procedure Reader (Stream : in out Util.Streams.Input_Stream'Class) is
+      begin
+         Analyzer.Analyze (Tokenizer, Stream, Consume);
+      end Reader;
+
+   begin
+      Search.Fields.Stream (Field, Reader'Access);
    end Analyze;
 
 end Search.Analyzers;
