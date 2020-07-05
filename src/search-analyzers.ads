@@ -18,6 +18,7 @@
 with Ada.Finalization;
 with Util.Streams;
 with Search.Filters;
+with Search.Fields;
 with Search.Tokenizers;
 package Search.Analyzers is
 
@@ -26,7 +27,13 @@ package Search.Analyzers is
 
    procedure Analyze (Analyzer  : in out Analyzer_Type;
                       Tokenizer : in out Search.Tokenizers.Tokenizer_Type'Class;
-                      Stream    : in out Util.Streams.Input_Stream'Class);
+                      Stream    : in out Util.Streams.Input_Stream'Class;
+                      Consume   : not null access procedure (Token : in String));
+
+   procedure Analyze (Analyzer  : in out Analyzer_Type;
+                      Tokenizer : in out Search.Tokenizers.Tokenizer_Type'Class;
+                      Field     : in Search.Fields.Field_Type;
+                      Consume   : not null access procedure (Token : in String));
 
 private
 
