@@ -20,6 +20,19 @@ package body Search.Tokenizers is
 
    use Ada.Streams;
 
+   procedure Setup (Separators : in out Element_Bitmap) is
+   begin
+      Separators := (others => False);
+      Separators (0 .. Character'Pos (' ')) := (others => True);
+      Separators (Character'Pos (ASCII.DEL)) := True;
+   end Setup;
+
+   overriding
+   procedure Initialize (Lexer : in out Tokenizer_Type) is
+   begin
+      Setup (Lexer.Separators);
+   end Initialize;
+
    procedure Fill (Lexer  : in out Tokenizer_Type;
                    Stream : in out Util.Streams.Input_Stream'Class) is
       Remain : constant Lexer_Offset := Lexer.Last - Lexer.Pos;
@@ -45,7 +58,7 @@ package body Search.Tokenizers is
             Pos := Lexer.Pos;
             exit when Pos >= Lexer.Last;
          end if;
-         exit when Character'Val (Lexer.Buffer (Pos)) /= ' ';
+         exit when not Lexer.Separators (Lexer.Buffer (Pos));
          Pos := Pos + 1;
       end loop;
       Lexer.Pos := Pos;
@@ -54,7 +67,7 @@ package body Search.Tokenizers is
    procedure Read_Token (Lexer  : in out Tokenizer_Type;
                          Stream : in out Util.Streams.Input_Stream'Class) is
       Pos : Lexer_Offset := Lexer.Pos;
-      C   : Character;
+      C   : Ada.Streams.Stream_Element;
    begin
       loop
          if Pos >= Lexer.Last then
@@ -64,9 +77,9 @@ package body Search.Tokenizers is
             exit when Pos >= Lexer.Last;
          end if;
 
-         C := Character'Val (Lexer.Buffer (Pos));
-         exit when C = ' ';
-         Util.Strings.Builders.Append (Lexer.Text, C);
+         C := Lexer.Buffer (Pos);
+         exit when Lexer.Separators (C);
+         Util.Strings.Builders.Append (Lexer.Text, Character'Val (C));
          Pos := Pos + 1;
       end loop;
       Lexer.Pos := Pos;
@@ -74,11 +87,13 @@ package body Search.Tokenizers is
 
    procedure Parse (Lexer    : in out Tokenizer_Type;
                     Stream   : in out Util.Streams.Input_Stream'Class;
-                    Consumer : in out Consumer_Type'Class) is
+                    Filter   : in out Consumer_Type'Class;
+                    Consumer : not null
+                      access procedure (Token : in String)) is
 
       procedure Process (Content : in String) is
       begin
-         Consumer.Push_Token (Content);
+         Filter.Push_Token (Content, Consumer);
       end Process;
 
       procedure Process_Token is
@@ -93,6 +108,7 @@ package body Search.Tokenizers is
 
          Lexer.Read_Token (Stream);
          Process_Token (Lexer.Text);
+         Util.Strings.Builders.Clear (Lexer.Text);
       end loop;
    end Parse;
 
