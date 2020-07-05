@@ -19,10 +19,15 @@
 package body Search.Filters is
 
    overriding
-   procedure Push_Token (Chain  : in out Filter_Type;
-                         Token  : in String) is
+   procedure Push_Token (Chain    : in out Filter_Type;
+                         Token    : in String;
+                         Consumer : not null access procedure (Token : in String)) is
    begin
-      Chain.Next.Push_Token (Token);
+      if Chain.Next /= null then
+         Chain.Next.Push_Token (Token, Consumer);
+      else
+         Consumer (Token);
+      end if;
    end Push_Token;
 
    procedure Add_Filter (Chain  : in out Filter_Chain;
