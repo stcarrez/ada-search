@@ -18,6 +18,7 @@
 
 with Search.Tokens.Tests;
 with Search.Fields.Tests;
+with Search.Tokenizers.Tests;
 package body Search.Testsuite is
 
    Tests : aliased Util.Tests.Test_Suite;
@@ -26,6 +27,7 @@ package body Search.Testsuite is
    begin
       Search.Tokens.Tests.Add_Tests (Tests'Access);
       Search.Fields.Tests.Add_Tests (Tests'Access);
+      Search.Tokenizers.Tests.Add_Tests (Tests'Access);
       return Tests'Access;
    end Suite;
 
