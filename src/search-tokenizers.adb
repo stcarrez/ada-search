@@ -30,6 +30,7 @@ package body Search.Tokenizers is
    overriding
    procedure Initialize (Lexer : in out Tokenizer_Type) is
    begin
+      Lexer.Last := -1;
       Setup (Lexer.Separators);
    end Initialize;
 
@@ -52,7 +53,7 @@ package body Search.Tokenizers is
       Pos : Lexer_Offset := Lexer.Pos;
    begin
       loop
-         if Pos >= Lexer.Last then
+         if Pos > Lexer.Last then
             Lexer.Pos := Pos;
             Lexer.Fill (Stream);
             Pos := Lexer.Pos;
@@ -70,7 +71,7 @@ package body Search.Tokenizers is
       C   : Ada.Streams.Stream_Element;
    begin
       loop
-         if Pos >= Lexer.Last then
+         if Pos > Lexer.Last then
             Lexer.Pos := Pos;
             Lexer.Fill (Stream);
             Pos := Lexer.Pos;
@@ -104,7 +105,7 @@ package body Search.Tokenizers is
       loop
          Lexer.Skip_Spaces (Stream);
          Pos := Lexer.Pos;
-         exit when Pos >= Lexer.Last;
+         exit when Pos > Lexer.Last;
 
          Lexer.Read_Token (Stream);
          Process_Token (Lexer.Text);
