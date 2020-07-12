@@ -16,6 +16,7 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with Util.Streams;
+with Ada.Containers;
 
 --  == Fields ==
 --  The field describe an element of a document that can be indexed.
@@ -27,6 +28,9 @@ package Search.Fields is
 
    --  Get the field name.
    function Get_Name (Field : in Field_Type) return String;
+
+   --  Get the field value for the meta field.
+   function Get_Value (Field : in Field_Type) return String;
 
    --  Returns True if this field is indexable.
    function Is_Indexable (Field : in Field_Type) return Boolean;
@@ -43,6 +47,9 @@ package Search.Fields is
    procedure Stream (Field : in Field_Type;
                      Into  : not null access
                        procedure (S : in out Util.Streams.Input_Stream'Class));
+
+   --  Create a hash on the field on its name only.
+   function Hash (Field : in Field_Type) return Ada.Containers.Hash_Type;
 
 private
 
