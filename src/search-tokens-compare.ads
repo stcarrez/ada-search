@@ -16,10 +16,13 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 
+with Ada.Containers;
 package Search.Tokens.Compare is
 
    function "=" (Left, Right : in Token_Type) return Boolean;
 
    function "<" (Left, Right : in Token_Type) return Boolean;
+
+   function Hash (Token : in Token_Type) return Ada.Containers.Hash_Type;
 
 end Search.Tokens.Compare;
