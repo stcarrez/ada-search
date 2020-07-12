@@ -15,7 +15,7 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-
+with Ada.Strings.Hash;
 package body Search.Tokens.Compare is
 
    function "=" (Left, Right : in Token_Type) return Boolean is
@@ -43,5 +43,14 @@ package body Search.Tokens.Compare is
 
       return Left.Get_Value < Right.Get_Value;
    end "<";
+
+   function Hash (Token : in Token_Type) return Ada.Containers.Hash_Type is
+   begin
+      if Token.Is_Null then
+         return 0;
+      else
+         return Ada.Strings.Hash (Token.Get_Value);
+      end if;
+   end Hash;
 
 end Search.Tokens.Compare;
