@@ -16,6 +16,7 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with Ada.Streams.Stream_IO;
+with Ada.Strings.Unbounded.Hash;
 
 with Util.Streams.Files;
 with Util.Streams.Buffered;
@@ -28,6 +29,18 @@ package body Search.Fields is
    begin
       return To_String (Field.Name);
    end Get_Name;
+
+   --  ------------------------------
+   --  Get the field value for the meta field.
+   --  ------------------------------
+   function Get_Value (Field : in Field_Type) return String is
+   begin
+      if Is_Indexable (Field) then
+         return "";
+      else
+         return To_String (Field.Value);
+      end if;
+   end Get_Value;
 
    --  ------------------------------
    --  Returns True if this field is indexable.
@@ -87,5 +100,13 @@ package body Search.Fields is
 
       end case;
    end Stream;
+
+   --  ------------------------------
+   --  Create a hash on the field on its name only.
+   --  ------------------------------
+   function Hash (Field : in Field_Type) return Ada.Containers.Hash_Type is
+   begin
+      return Ada.Strings.Unbounded.Hash (Field.Name);
+   end Hash;
 
 end Search.Fields;
