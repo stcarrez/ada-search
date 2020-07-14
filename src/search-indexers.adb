@@ -57,7 +57,7 @@ package body Search.Indexers is
 
       procedure Index_Field (Field : in Search.Fields.Field_Type) is
       begin
-         Indexer.Add_Field (Document, Field, Analyzer, Tokenizer);
+         Indexer_Type'Class (Indexer).Add_Field (Document, Field, Analyzer, Tokenizer);
       end Index_Field;
 
    begin
