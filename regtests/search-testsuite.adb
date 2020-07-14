@@ -19,12 +19,14 @@
 with Search.Tokens.Tests;
 with Search.Fields.Tests;
 with Search.Tokenizers.Tests;
+with Search.Positions.Tests;
 package body Search.Testsuite is
 
    Tests : aliased Util.Tests.Test_Suite;
 
    function Suite return Util.Tests.Access_Test_Suite is
    begin
+      Search.Positions.Tests.Add_Tests (Tests'Access);
       Search.Tokens.Tests.Add_Tests (Tests'Access);
       Search.Fields.Tests.Add_Tests (Tests'Access);
       Search.Tokenizers.Tests.Add_Tests (Tests'Access);
