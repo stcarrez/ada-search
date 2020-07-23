@@ -19,6 +19,7 @@ AC_SUBST(SEARCH_MICRO_VERSION)
 AM_GNAT_LIBRARY_PROJECT(search)
 
 AM_GNAT_FIND_ADA_UTIL([search])
+AM_GNAT_FIND_ADA_ADO([search])
 
 AM_GNAT_FIND_PROJECT([ada-steamer],[Ada Stemmer Library],[stemmer],
   [git@github.com:stcarrez/ada-stemmer.git],
