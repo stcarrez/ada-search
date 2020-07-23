@@ -16,7 +16,6 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with Interfaces;
-with Ada.Unchecked_Deallocation;
 package body Search.Positions is
 
    use Ada.Streams;
@@ -24,24 +23,40 @@ package body Search.Positions is
 
    function LEB_Length (Value : in Interfaces.Unsigned_64) return Stream_Element_Offset;
 
-   procedure Free is
-      new Ada.Unchecked_Deallocation (Object => Ada.Streams.Stream_Element_Array,
-                                      Name   => Data_Access);
-
+   ALIGN_SIZE     : constant Stream_Element_Offset := 16;
    SIZE_INCREMENT : constant Stream_Element_Offset := 16;
 
-   function Next_Length (Size : in Stream_Element_Offset) return Stream_Element_Offset is
+   function Next_Length (Size : in Stream_Element_Size) return Stream_Element_Size is
       (Size + (Size / 4) + SIZE_INCREMENT);
+
+   function Align_Length (Size : in Stream_Element_Size) return Stream_Element_Size is
+      (((Size + ALIGN_SIZE - 1) / ALIGN_SIZE) * ALIGN_SIZE);
+
+   procedure Allocate (Positions : in out Position_Type;
+                       Length    : in Stream_Element_Size) is
+      R : Position_Refs.Ref;
+   begin
+      R := Position_Refs.Create (new Position_Content_Type '(Util.Refs.Ref_Entity with
+                                                             Length => Length,
+                                                             Size => 0,
+                                                             Last => 0,
+                                                             others => <>));
+      Positions := Position_Type '(R with others => <>);
+   end Allocate;
 
    --  ------------------------------
    --  Initialize the positions with the data stream.
    --  ------------------------------
    procedure Initialize (Positions : in out Position_Type;
                          Data      : in Ada.Streams.Stream_Element_Array) is
+      Len : constant Stream_Element_Size := Align_Length (Data'Length);
+      R : Position_Refs.Ref;
    begin
-      Free (Positions.Data);
-      Positions.Data := new Ada.Streams.Stream_Element_Array '(Data);
-      Positions.Length := Data'Length;
+      R := Position_Refs.Create (new Position_Content_Type '(Util.Refs.Ref_Entity with
+                                                               Length => Len,
+                                                             Size => Data'Length,
+                                                             others => <>));
+      Positions := Position_Type '(R with others => <>);
    end Initialize;
 
    --  ------------------------------
@@ -49,7 +64,11 @@ package body Search.Positions is
    --  ------------------------------
    function Last (Positions : in Position_Type) return Natural is
    begin
-      return Positions.Last;
+      if Positions.Is_Null then
+         return 0;
+      else
+         return Positions.Value.Last;
+      end if;
    end Last;
 
    function LEB_Length (Value : in Interfaces.Unsigned_64) return Stream_Element_Offset is
@@ -82,35 +101,51 @@ package body Search.Positions is
    --  ------------------------------
    procedure Add (Positions : in out Position_Type;
                   Value     : in Natural) is
-      P : Ada.Streams.Stream_Element_Offset;
-      V, U : Interfaces.Unsigned_64;
+      V : Interfaces.Unsigned_64;
    begin
-      P := Positions.Length + 1;
-      V := Interfaces.Unsigned_64 (Value - Positions.Last);
-      if Positions.Data = null or else P + LEB_Length (V) > Positions.Data'Last then
+      if Positions.Is_Null then
+         Allocate (Positions, ALIGN_SIZE);
+         V := Interfaces.Unsigned_64 (Value);
+      else
          declare
-            Old : Data_Access := Positions.Data;
-            Len : constant Stream_Element_Offset := Next_Length (Positions.Length);
+            Item  : constant Position_Refs.Element_Accessor := Positions.Value;
          begin
-            Positions.Data := new Ada.Streams.Stream_Element_Array (1 .. Len);
-            if Old /= null then
-               Positions.Data (1 .. Positions.Length) := Old (1 .. Positions.Length);
-               Free (Old);
+            V := Interfaces.Unsigned_64 (Value - Item.Last);
+            if Item.Size + LEB_Length (V) >= Item.Length then
+               declare
+                  Length : constant Stream_Element_Offset := Next_Length (Item.Length);
+                  R      : Position_Refs.Ref;
+               begin
+                  R := Position_Refs.Create
+                    (new Position_Content_Type '(Util.Refs.Ref_Entity with
+                                                   Length => Length,
+                                                 Size => Item.Size,
+                                                 Last => Item.Last,
+                                                 others => <>));
+                  R.Value.Data (1 .. Item.Size) := Item.Data (1 .. Item.Size);
+                  Positions := Position_Type '(R with others => <>);
+               end;
             end if;
          end;
       end if;
-      Positions.Last := Value;
-      loop
-         if V < 16#07F# then
-            Positions.Data (P) := Ada.Streams.Stream_Element (V);
-            Positions.Length := P;
-            return;
-         end if;
-         U := V and 16#07F#;
-         Positions.Data (P) := Ada.Streams.Stream_Element (U or 16#80#);
-         P := P + 1;
-         V := Interfaces.Shift_Right (V, 7);
-      end loop;
+      declare
+         Item  : constant Position_Refs.Element_Accessor := Positions.Value;
+         P     : Ada.Streams.Stream_Element_Offset := Item.Size + 1;
+         U     : Interfaces.Unsigned_64;
+      begin
+         Item.Last := Value;
+         loop
+            if V < 16#07F# then
+               Item.Data (P) := Ada.Streams.Stream_Element (V);
+               Item.Size := P;
+               return;
+            end if;
+            U := V and 16#07F#;
+            Item.Data (P) := Ada.Streams.Stream_Element (U or 16#80#);
+            P := P + 1;
+            V := Interfaces.Shift_Right (V, 7);
+         end loop;
+      end;
    end Add;
 
    --  ------------------------------
@@ -120,13 +155,100 @@ package body Search.Positions is
                    Process   : not null
                      access procedure (Data : in Ada.Streams.Stream_Element_Array)) is
    begin
-      Process (Positions.Data (1 .. Positions.Length));
+      Process (Positions.Value.Data (1 .. Positions.Value.Size));
    end Pack;
 
-   overriding
-   procedure Finalize (Positions : in out Position_Type) is
+   --  ------------------------------
+   --  Encode the value represented by <tt>Val</tt> in the stream array <tt>Into</tt> starting
+   --  at position <tt>Pos</tt> in that array.  The value is encoded using LEB128 format, 7-bits
+   --  at a time until all non zero bits are written.  The <tt>Last</tt> parameter is updated
+   --  to indicate the position of the last valid byte written in <tt>Into</tt>.
+   --  ------------------------------
+   procedure Write_LEB128 (Stream : access Ada.Streams.Root_Stream_Type'Class;
+                           Val    : in Interfaces.Unsigned_64) is
+      V, U : Interfaces.Unsigned_64;
    begin
-      Free (Positions.Data);
-   end Finalize;
+      V := Val;
+      loop
+         if V < 16#07F# then
+            Ada.Streams.Stream_Element'Write (Stream, Ada.Streams.Stream_Element (V));
+            return;
+         end if;
+         U := V and 16#07F#;
+         Ada.Streams.Stream_Element'Write (Stream, Ada.Streams.Stream_Element (U or 16#80#));
+         V := Interfaces.Shift_Right (V, 7);
+      end loop;
+   end Write_LEB128;
+
+   --  ------------------------------
+   --  Decode from the byte array <tt>From</tt> the value represented as LEB128 format starting
+   --  at position <tt>Pos</tt> in that array.  After decoding, the <tt>Last</tt> index is updated
+   --  to indicate the last position in the byte array.
+   --  ------------------------------
+   function Read_LEB128 (Stream  : access Ada.Streams.Root_Stream_Type'Class)
+                        return Interfaces.Unsigned_64 is
+      use type Interfaces.Unsigned_8;
+
+      Value : Interfaces.Unsigned_64 := 0;
+      V     : Interfaces.Unsigned_8;
+      Shift : Integer := 0;
+   begin
+      loop
+         V := Interfaces.Unsigned_8'Input (Stream);
+         if (V and 16#80#) = 0 then
+            return Interfaces.Shift_Left (Interfaces.Unsigned_64 (V), Shift) or Value;
+         end if;
+         V := V and 16#07F#;
+         Value := Interfaces.Shift_Left (Interfaces.Unsigned_64 (V), Shift) or Value;
+         Shift := Shift + 7;
+      end loop;
+   end Read_LEB128;
+
+   --  ------------------------------
+   --  Write the list of positions in the stream.
+   --  ------------------------------
+   procedure Write (Stream    : access Ada.Streams.Root_Stream_Type'Class;
+                    Positions : in Position_Type) is
+   begin
+      if Positions.Is_Null then
+         Write_LEB128 (Stream, 0);
+      else
+         declare
+            Value : constant Position_Refs.Element_Accessor := Positions.Value;
+         begin
+            Write_LEB128 (Stream, Interfaces.Unsigned_64 (Value.Size));
+            Write_LEB128 (Stream, Interfaces.Unsigned_64 (Value.Last));
+            Stream.Write (Value.Data (1 .. Value.Size));
+         end;
+      end if;
+   end Write;
+
+   --  ------------------------------
+   --  Read a list of positions from the stream.
+   --  ------------------------------
+   function Read (Stream : access Ada.Streams.Root_Stream_Type'Class)
+                 return Position_Type is
+      Size   : constant Stream_Element_Size := Stream_Element_Size (Read_LEB128 (Stream));
+      Result : Position_Type;
+   begin
+      if Size > 0 then
+         declare
+            Length : constant Stream_Element_Size := Align_Length (Size);
+            Last   : constant Natural := Natural (Read_LEB128 (Stream));
+            Pos    : Ada.Streams.Stream_Element_Offset;
+            R      : Position_Refs.Ref;
+         begin
+            R := Position_Refs.Create
+              (new Position_Content_Type '(Util.Refs.Ref_Entity with
+                                             Length => Length,
+                                           Size => Size,
+                                           Last => Last,
+                                           others => <>));
+            Stream.Read (R.Value.Data (1 .. Size), Pos);
+            Result := Position_Type '(R with others => <>);
+         end;
+      end if;
+      return Result;
+   end Read;
 
 end Search.Positions;
