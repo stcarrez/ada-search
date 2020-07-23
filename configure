@@ -585,6 +585,7 @@ ac_unique_file="src/search.ads"
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 STEMMER_DIR
+ADO_DIR
 UTIL_DIR
 NR_CPUS
 BUILD
@@ -668,6 +669,7 @@ enable_default_shared
 enable_distrib
 enable_coverage
 with_ada_util
+with_ada_ado
 with_ada_steamer
 '
       ac_precious_vars='build_alias
@@ -1306,6 +1308,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-build-root=PATH  Path to find the Ada libraries
   --with-ada-util=x       Path for Ada Utility Library
+  --with-ada-ado=x        Path for Ada Database Objects
   --with-ada-steamer=x    Path for Ada Stemmer Library
 
 Report bugs to the package provider.
@@ -2538,6 +2541,115 @@ $as_echo "no" >&6; }
   This project was not found in ../utilada_base nor in ../ada-util-*.
   The component is available at git@github.com:stcarrez/ada-util.git.
   Please, download and configure Ada Utility Library.
+  The current configuration was using:
+    ${GNATMAKE}
+    ADA_PROJECT_PATH=$ADA_PROJECT_PATH
+" "$LINENO" 5
+    fi
+  fi
+
+
+
+
+
+
+# Check whether --with-ada-ado was given.
+if test "${with_ada_ado+set}" = set; then :
+  withval=$with_ada_ado;
+      if test "${withval}/" = "yes/"; then
+        ac_cv_gnat_project_name_ado=${awa_build_root}ado
+      else
+        ac_cv_gnat_project_name_ado=${withval}/
+        if test -d "${withval}"; then
+	      ac_cv_gnat_project_name_ado=${withval}/ado
+	    fi
+      fi
+
+else
+
+      ac_cv_gnat_project_name_ado=${awa_build_root}ado
+
+fi
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking Ada Database Objects" >&5
+$as_echo_n "checking Ada Database Objects... " >&6; }
+if ${ac_cv_gnat_project_ado+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    rm -f conftest.gpr
+    # Search in the GNAT project path.
+    echo "with \"${ac_cv_gnat_project_name_ado}\"; project conftest is for Source_Dirs use (); end conftest;" > conftest.gpr
+    if { ac_try='gnat ls -Pconftest.gpr system.ads > /dev/null 2>conftest.out'
+  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; }
+    then
+      ac_cv_gnat_project_ado=yes
+    else
+      ac_cv_gnat_project_ado=no
+
+      # Search in ../ada-ado-*/ado.gpr
+      dir=`cd .. && pwd ${awa_pwd_option}`
+      files=`ls -r $dir/ada-ado/ado.gpr $dir/ado/ado.gpr $dir/ada-ado-*/ado.gpr 2>/dev/null`
+      for name in $files; do
+        dir=`dirname $name`
+        # AC_MSG_CHECKING([for Ada Database Objects project in ${dir}])
+        echo "with \"${name}\"; project conftest is for Source_Dirs use (); end conftest;" > conftest.gpr
+        if { ac_try='gnat ls -Pconftest.gpr system.ads > /dev/null 2>conftest.out'
+  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; }
+        then
+           ac_cv_gnat_project_ado=yes
+		   ac_cv_gnat_project_name_ado=${name}
+           # AC_MSG_RESULT(yes, using ${name})
+           break
+        else
+           ac_cv_gnat_project_ado=no
+           # AC_MSG_RESULT(no)
+        fi
+      done
+    fi
+    rm -f conftest.gpr
+
+    if test x${ac_cv_gnat_project_ado} = xyes; then
+      ac_cv_gnat_project_with_ado="with \"${ac_cv_gnat_project_name_ado}\";";
+      ac_cv_gnat_project_dir_ado=`dirname ${ac_cv_gnat_project_name_ado}`
+      if test ${ac_cv_gnat_project_dir_ado} = . ; then
+        ac_cv_gnat_project_dir_ado=
+      else
+        ac_cv_gnat_project_dir_ado="${ac_cv_gnat_project_dir_ado}/"
+      fi
+    else
+      ac_cv_gnat_project_dir_ado=
+      ac_cv_gnat_project_name_ado=
+    fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_gnat_project_ado" >&5
+$as_echo "$ac_cv_gnat_project_ado" >&6; }
+
+  if test x${ac_cv_gnat_project_ado} = xyes; then
+
+      ADO_DIR=${ac_cv_gnat_project_dir_ado}
+
+  else
+    if test x"Building search requires the Ada Database Objects Library." != x; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+      as_fn_error $? "Building search requires the Ada Database Objects Library.
+  You should build and install the Ada Database Objects component.
+  It must be available and found by ${GNATMAKE}.
+  This project was not found in the ADA_PROJECT_PATH environment variable.
+  This project was not found in ../ado nor in ../ada-ado-*.
+  The component is available at git@github.com:stcarrez/ada-ado.git.
+  Please, download and configure Ada Database Objects.
   The current configuration was using:
     ${GNATMAKE}
     ADA_PROJECT_PATH=$ADA_PROJECT_PATH
