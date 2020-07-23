@@ -10,6 +10,9 @@ SHARED_MAKE_ARGS += -XLIBRARY_TYPE=relocatable
 
 include Makefile.defaults
 
+DYNAMO_ARGS=--package Search.Models \
+  db uml/search.zargo
+
 # Build executables for all mains defined by the project.
 build-test::	setup
 	$(GNATMAKE) $(GPRFLAGS) -p -P$(NAME)_tests $(MAKE_ARGS)
@@ -17,6 +20,9 @@ build-test::	setup
 # Build and run the unit tests
 test:	build
 	bin/search_harness -xml search-aunit.xml
+
+generate:
+	$(DYNAMO) generate $(DYNAMO_ARGS)
 
 install-samples:
 	$(MKDIR) -p $(samplesdir)/samples
