@@ -38,6 +38,9 @@ package Search.Fields is
    --  Returns True if this field is composed of multiple tokens.
    function Is_Tokenized (Field : in Field_Type) return Boolean;
 
+   --  Returns True if this field is stored in the index.
+   function Is_Stored (Field : in Field_Type) return Boolean;
+
    --  Create a field with the given name and content.
    function Create (Name  : in String;
                     Value : in String;
