@@ -35,7 +35,7 @@ package body Search.Fields is
    --  ------------------------------
    function Get_Value (Field : in Field_Type) return String is
    begin
-      if Is_Indexable (Field) then
+      if not Is_Stored (Field) then
          return "";
       else
          return To_String (Field.Value);
@@ -57,6 +57,14 @@ package body Search.Fields is
    begin
       return Field.Kind = F_CONTENT or Field.Kind = F_PATH;
    end Is_Tokenized;
+
+   --  ------------------------------
+   --  Returns True if this field is stored in the index.
+   --  ------------------------------
+   function Is_Stored (Field : in Field_Type) return Boolean is
+   begin
+      return Field.Kind = F_Path;
+   end Is_Stored;
 
    --  ------------------------------
    --  Create a field with the given name and content.
