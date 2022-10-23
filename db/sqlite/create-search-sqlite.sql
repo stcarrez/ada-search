@@ -1,30 +1,39 @@
 pragma synchronous=OFF;
 /* Copied from ado-sqlite.sql*/
 /* File generated automatically by dynamo */
-/* Entity types */
-CREATE TABLE entity_type (
-  /* the entity type identifier */
-  `ID` INTEGER PRIMARY KEY AUTOINCREMENT,
-  /* the entity type name (table name) */
-  `name` VARCHAR(127) UNIQUE NOT NULL
-);
+/* Entity table that enumerates all known database tables */
+CREATE TABLE IF NOT EXISTS ado_entity_type (
+  /* the database table unique entity index */
+  `id` INTEGER  PRIMARY KEY AUTOINCREMENT,
+  /* the database entity name */
+  `name` VARCHAR(127) UNIQUE );
 /* Sequence generator */
-CREATE TABLE sequence (
+CREATE TABLE IF NOT EXISTS ado_sequence (
   /* the sequence name */
-  `name` VARCHAR(127) PRIMARY KEY,
+  `name` VARCHAR(127) UNIQUE NOT NULL,
   /* the sequence record version */
-  `version` int ,
+  `version` INTEGER NOT NULL,
   /* the sequence value */
-  `value` BIGINT ,
+  `value` BIGINT NOT NULL,
   /* the sequence block size */
-  `block_size` BIGINT 
+  `block_size` BIGINT NOT NULL,
+  PRIMARY KEY (`name`)
 );
-INSERT INTO entity_type (name) VALUES ("entity_type");
-INSERT INTO entity_type (name) VALUES ("sequence");
+/* Database schema version (per module) */
+CREATE TABLE IF NOT EXISTS ado_version (
+  /* the module name */
+  `name` VARCHAR(127) UNIQUE NOT NULL,
+  /* the database version schema for this module */
+  `version` INTEGER NOT NULL,
+  PRIMARY KEY (`name`)
+);
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("ado_entity_type");
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("ado_sequence");
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("ado_version");
 /* Copied from search-sqlite.sql*/
 /* File generated automatically by dynamo */
 /*  */
-CREATE TABLE search_document (
+CREATE TABLE IF NOT EXISTS search_document (
   /* the document identifier. */
   `id` BIGINT NOT NULL,
   /*  */
@@ -32,7 +41,7 @@ CREATE TABLE search_document (
   PRIMARY KEY (`id`)
 );
 /*  */
-CREATE TABLE search_field (
+CREATE TABLE IF NOT EXISTS search_field (
   /* the field identifier. */
   `id` BIGINT NOT NULL,
   /* the field name. */
@@ -44,13 +53,13 @@ CREATE TABLE search_field (
   PRIMARY KEY (`id`)
 );
 /*  */
-CREATE TABLE search_index (
+CREATE TABLE IF NOT EXISTS search_index (
   /* the index identifier. */
   `id` BIGINT NOT NULL,
   PRIMARY KEY (`id`)
 );
 /*  */
-CREATE TABLE search_sequence (
+CREATE TABLE IF NOT EXISTS search_sequence (
   /*  */
   `positions` LONGBLOB NOT NULL,
   /* the token being referenced. */
@@ -60,7 +69,7 @@ CREATE TABLE search_sequence (
   PRIMARY KEY (`token`, `field`)
 );
 /*  */
-CREATE TABLE search_token (
+CREATE TABLE IF NOT EXISTS search_token (
   /* the token identifier */
   `id` BIGINT NOT NULL,
   /* the token string */
@@ -69,8 +78,9 @@ CREATE TABLE search_token (
   `index_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`)
 );
-INSERT INTO entity_type (name) VALUES ("search_document");
-INSERT INTO entity_type (name) VALUES ("search_field");
-INSERT INTO entity_type (name) VALUES ("search_index");
-INSERT INTO entity_type (name) VALUES ("search_sequence");
-INSERT INTO entity_type (name) VALUES ("search_token");
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("search_document");
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("search_field");
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("search_index");
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("search_sequence");
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("search_token");
+INSERT OR IGNORE INTO ado_version (name, version) VALUES ("search", 1);

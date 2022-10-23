@@ -1,6 +1,6 @@
 /* File generated automatically by dynamo */
 /*  */
-CREATE TABLE search_document (
+CREATE TABLE IF NOT EXISTS search_document (
   /* the document identifier. */
   `id` BIGINT NOT NULL,
   /*  */
@@ -8,7 +8,7 @@ CREATE TABLE search_document (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*  */
-CREATE TABLE search_field (
+CREATE TABLE IF NOT EXISTS search_field (
   /* the field identifier. */
   `id` BIGINT NOT NULL,
   /* the field name. */
@@ -20,13 +20,13 @@ CREATE TABLE search_field (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*  */
-CREATE TABLE search_index (
+CREATE TABLE IF NOT EXISTS search_index (
   /* the index identifier. */
   `id` BIGINT NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*  */
-CREATE TABLE search_sequence (
+CREATE TABLE IF NOT EXISTS search_sequence (
   /*  */
   `positions` LONGBLOB NOT NULL,
   /* the token being referenced. */
@@ -36,7 +36,7 @@ CREATE TABLE search_sequence (
   PRIMARY KEY (`token`, `field`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*  */
-CREATE TABLE search_token (
+CREATE TABLE IF NOT EXISTS search_token (
   /* the token identifier */
   `id` BIGINT NOT NULL,
   /* the token string */
@@ -45,10 +45,6 @@ CREATE TABLE search_token (
   `index_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-INSERT INTO entity_type (name) VALUES
-("search_document")
-,("search_field")
-,("search_index")
-,("search_sequence")
-,("search_token")
-;
+INSERT IGNORE INTO ado_entity_type (name) VALUES
+("search_document"), ("search_field"), ("search_index"), ("search_sequence"), ("search_token");
+INSERT IGNORE INTO ado_version (name, version) VALUES ("search", 1);

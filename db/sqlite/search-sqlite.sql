@@ -1,6 +1,6 @@
 /* File generated automatically by dynamo */
 /*  */
-CREATE TABLE search_document (
+CREATE TABLE IF NOT EXISTS search_document (
   /* the document identifier. */
   `id` BIGINT NOT NULL,
   /*  */
@@ -8,7 +8,7 @@ CREATE TABLE search_document (
   PRIMARY KEY (`id`)
 );
 /*  */
-CREATE TABLE search_field (
+CREATE TABLE IF NOT EXISTS search_field (
   /* the field identifier. */
   `id` BIGINT NOT NULL,
   /* the field name. */
@@ -20,13 +20,13 @@ CREATE TABLE search_field (
   PRIMARY KEY (`id`)
 );
 /*  */
-CREATE TABLE search_index (
+CREATE TABLE IF NOT EXISTS search_index (
   /* the index identifier. */
   `id` BIGINT NOT NULL,
   PRIMARY KEY (`id`)
 );
 /*  */
-CREATE TABLE search_sequence (
+CREATE TABLE IF NOT EXISTS search_sequence (
   /*  */
   `positions` LONGBLOB NOT NULL,
   /* the token being referenced. */
@@ -36,7 +36,7 @@ CREATE TABLE search_sequence (
   PRIMARY KEY (`token`, `field`)
 );
 /*  */
-CREATE TABLE search_token (
+CREATE TABLE IF NOT EXISTS search_token (
   /* the token identifier */
   `id` BIGINT NOT NULL,
   /* the token string */
@@ -45,8 +45,9 @@ CREATE TABLE search_token (
   `index_id` BIGINT NOT NULL,
   PRIMARY KEY (`id`)
 );
-INSERT INTO entity_type (name) VALUES ("search_document");
-INSERT INTO entity_type (name) VALUES ("search_field");
-INSERT INTO entity_type (name) VALUES ("search_index");
-INSERT INTO entity_type (name) VALUES ("search_sequence");
-INSERT INTO entity_type (name) VALUES ("search_token");
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("search_document");
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("search_field");
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("search_index");
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("search_sequence");
+INSERT OR IGNORE INTO ado_entity_type (name) VALUES ("search_token");
+INSERT OR IGNORE INTO ado_version (name, version) VALUES ("search", 1);
