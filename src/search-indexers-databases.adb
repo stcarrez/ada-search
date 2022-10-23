@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  search-indexers -- Search engine indexer
---  Copyright (C) 2020 Stephane Carrez
+--  Copyright (C) 2020, 2022 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -124,7 +124,7 @@ package body Search.Indexers.Databases is
                begin
                   Db_Token.Set_Index (Indexer.Index);
                   Db_Token.Set_Name (Token.Get_Value);
-                  --  Db_Token.Save (Indexer.Session);
+                  Db_Token.Save (Indexer.Session);
                   Token_Id := Db_Token.Get_Id;
                   Indexer.Tokens.Insert (Token, Token_Id);
                end;
@@ -158,6 +158,7 @@ package body Search.Indexers.Databases is
                         Analyzer  : in out Search.Analyzers.Analyzer_Type'Class;
                         Tokenizer : in out Search.Tokenizers.Tokenizer_Type'Class) is
    begin
+      Indexer.Positions.Clear;
       Search.Indexers.Indexer_Type (Indexer).Add_Field (Document, Field, Analyzer, Tokenizer);
       Save (Indexer, Field);
    end Add_Field;
