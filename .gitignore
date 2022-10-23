@@ -1,3 +1,8 @@
+/regtests/results
+/bin
+/obj
+/lib
+/cover
 autom4te.cache
 config.status
 Makefile.conf
