@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  search-documents -- Documents indexed by the search engine
---  Copyright (C) 2020 Stephane Carrez
+--  Copyright (C) 2020, 2022 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,8 @@ with Search.Fields.Vectors;
 package Search.Documents is
 
    Field_Not_Found : exception;
+
+   type Document_Identifier_Type is new Positive;
 
    type Document_Type is limited new Ada.Finalization.Limited_Controlled with private;
 
