@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  search-fields -- Document fields
---  Copyright (C) 2020 Stephane Carrez
+--  Copyright (C) 2020, 2022 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,6 +44,9 @@ package Search.Fields is
    --  Create a field with the given name and content.
    function Create (Name  : in String;
                     Value : in String;
+                    Kind  : in Field_Kind := F_TOKEN) return Field_Type;
+   function Create (Name  : in UString;
+                    Value : in UString;
                     Kind  : in Field_Kind := F_TOKEN) return Field_Type;
 
    --  Stream the content of the field to the procedure.
