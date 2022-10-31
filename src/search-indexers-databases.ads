@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  search-indexers-databases -- Search engine indexer
---  Copyright (C) 2020 Stephane Carrez
+--  Copyright (C) 2020, 2022 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,6 +62,19 @@ package Search.Indexers.Databases is
                         Document : in out Search.Documents.Document_Type'Class;
                         Field    : in Search.Fields.Field_Type;
                         Token    : in String);
+
+   overriding
+   procedure Find (Indexer : in out Indexer_Type;
+                   Token   : in String;
+                   Collect : not null access
+                     procedure (Doc    : in Documents.Document_Identifier_Type;
+                                Field  : in Fields.Field_Type;
+                                Pos    : in Positions.Position_Type));
+
+   overriding
+   procedure Load (Indexer : in out Indexer_Type;
+                   Doc     : in out Search.Documents.Document_Type'Class;
+                   Id      : in Search.Documents.Document_Identifier_Type);
 
 private
 

@@ -15,7 +15,8 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-
+with ADO.Statements;
+with ADO.SQL;
 package body Search.Indexers.Databases is
 
    protected body Field_Map is
@@ -133,7 +134,7 @@ package body Search.Indexers.Databases is
             Search.Positions.Pack (Positions.all, Set_Positions'Access);
             Db_Seq.Set_Token (Token_Id);
             Db_Seq.Set_Field (Field_Id);
-            --  Db_Seq.Save (Indexer.Session);
+            Db_Seq.Save (Indexer.Session);
             Persistent_Fields.Add (Tree, Token.Get_Value, Positions.all);
          end;
          Position_Maps.Next (Pos);
@@ -200,5 +201,60 @@ package body Search.Indexers.Databases is
    begin
       null;
    end Add_Field;
+
+   overriding
+   procedure Find (Indexer : in out Indexer_Type;
+                   Token   : in String;
+                   Collect : not null access
+                     procedure (Doc    : in Documents.Document_Identifier_Type;
+                                Field  : in Fields.Field_Type;
+                                Pos    : in Positions.Position_Type)) is
+      Stmt  : ADO.Statements.Query_Statement;
+   begin
+      Stmt := Indexer.Session.Create_Statement ("SELECT seq.positions, field.name, field.value, field.document_id "
+         & "FROM search_sequence AS seq "
+         & "INNER JOIN search_token AS tok ON seq.token = tok.id "
+         & "INNER JOIN search_field AS field ON seq.field = field.id "
+         & "WHERE tok.name = :token");
+      Stmt.Bind_Param ("token", Token);
+      Stmt.Execute;
+      while Stmt.Has_Elements loop
+         declare
+            Data      : ADO.Blob_Ref := Stmt.Get_Blob (0);
+            Name      : constant UString := Stmt.Get_Unbounded_String (1);
+            Value     : constant UString := Stmt.Get_Unbounded_String (2);
+            Doc       : ADO.Identifier := Stmt.Get_Identifier (3);
+            Field     : Fields.Field_Type := Fields.Create (Name, Value);
+            Pos : Positions.Position_Type;
+         begin
+            Positions.Initialize (Pos, Data.Value.Data);
+            Collect (Documents.Document_Identifier_Type (Doc), Field, Pos);
+         end;
+         Stmt.Next;
+      end loop;
+   end Find;
+
+   overriding
+   procedure Load (Indexer : in out Indexer_Type;
+                   Doc     : in out Search.Documents.Document_Type'Class;
+                   Id      : in Search.Documents.Document_Identifier_Type) is
+      Stmt  : ADO.Statements.Query_Statement;
+   begin
+   Stmt := Indexer.Session.Create_Statement ("SELECT field.name, field.value "
+         & "FROM search_field AS field "
+         & "WHERE field.document_id = :doc");
+      Stmt.Bind_Param ("doc", Long_Long_Integer (Id));
+      Stmt.Execute;
+      while Stmt.Has_Elements loop
+         declare
+            Name      : constant UString := Stmt.Get_Unbounded_String (0);
+            Value     : constant UString := Stmt.Get_Unbounded_String (1);
+            Field     : Fields.Field_Type := Fields.Create (Name, Value);
+         begin
+            Doc.Add_Field (Field);
+         end;
+         Stmt.Next;
+      end loop;
+   end Load;
 
 end Search.Indexers.Databases;
