@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  search-fields -- Document fields
---  Copyright (C) 2020 Stephane Carrez
+--  Copyright (C) 2020, 2022 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,11 +35,7 @@ package body Search.Fields is
    --  ------------------------------
    function Get_Value (Field : in Field_Type) return String is
    begin
-      if not Is_Stored (Field) then
-         return "";
-      else
-         return To_String (Field.Value);
-      end if;
+      return To_String (Field.Value);
    end Get_Value;
 
    --  ------------------------------
@@ -76,6 +72,14 @@ package body Search.Fields is
       return Field_Type '(Kind  => Kind,
                           Name  => To_UString (Name),
                           Value => To_UString (Value));
+   end Create;
+   function Create (Name  : in UString;
+                    Value : in UString;
+                    Kind  : in Field_Kind := F_TOKEN) return Field_Type is
+   begin
+      return Field_Type '(Kind  => Kind,
+                          Name  => Name,
+                          Value => Value);
    end Create;
 
    --  ------------------------------
