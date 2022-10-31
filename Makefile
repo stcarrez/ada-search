@@ -24,6 +24,12 @@ test:	build
 generate:
 	$(DYNAMO) generate $(DYNAMO_ARGS)
 
+samples: search.db
+	$(GNATMAKE) $(GPRFLAGS) -p -Psamples $(MAKE_ARGS)
+
+search.db:
+	sqlite3 search.db < db/sqlite/create-search-sqlite.sql
+
 install-samples:
 	$(MKDIR) -p $(samplesdir)/samples
 	cp -rp $(srcdir)/samples/*.ad[sb] $(samplesdir)/samples/
@@ -31,3 +37,5 @@ install-samples:
 	cp -p $(srcdir)/config.gpr $(samplesdir)
 
 $(eval $(call ada_library,$(NAME)))
+
+.PHONY: samples
