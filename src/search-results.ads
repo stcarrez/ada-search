@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  search-results -- Results of a search
---  Copyright (C) 2020 Stephane Carrez
+--  Copyright (C) 2020, 2022 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,6 +31,9 @@ package Search.Results is
 
    package Result_Vectors is
      new Ada.Containers.Vectors (Element_Type => Result_Type,
-				 Index_Type   => Positive);
+				                     Index_Type   => Positive);
+
+   subtype Result_Vector is Result_Vectors.Vector;
+   subtype Result_Cursor is Result_Vectors.Cursor;
 
 end Search.Results;
