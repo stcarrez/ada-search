@@ -15,7 +15,7 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-
+with Util.Streams.Buffered;
 package body Search.Indexers is
 
    --  ------------------------------
@@ -63,5 +63,32 @@ package body Search.Indexers is
    begin
       Document.Iterate (Index_Field'Access);
    end Add_Document;
+
+   procedure Find (Indexer   : in out Indexer_Type;
+                   Query     : in String;
+                   Analyzer  : in out Search.Analyzers.Analyzer_Type'Class;
+                   Tokenizer : in out Search.Tokenizers.Tokenizer_Type'Class;
+                   Results   : in out Search.Results.Result_Vector) is
+
+      procedure Collect (Doc    : in Documents.Document_Identifier_Type;
+                         Field  : in Fields.Field_Type;
+                         Pos    : in Positions.Position_Type) is
+         Item : Search.Results.Result_Type;
+      begin
+         Item.Doc_Id := Doc;
+         Item.Score := 1.0;
+         Results.Append (Item);
+      end Collect;
+
+      procedure Consume (Token : in String) is
+      begin
+         Indexer_Type'Class (Indexer).Find (Token, Collect'Access);
+      end Consume;
+
+      Stream : Util.Streams.Buffered.Input_Buffer_Stream;
+   begin
+      Stream.Initialize (Query);
+      Analyzer.Analyze (Tokenizer, Stream, Consume'Access);
+   end Find;
 
 end Search.Indexers;
