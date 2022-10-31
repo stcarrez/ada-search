@@ -3,7 +3,7 @@ with "search";
 with "ado_sqlite";
 project Samples is
 
-   Mains := ("indexer.adb");
+   Mains := ("indexer.adb", "finder.adb");
 
    for Main use Mains;
 

@@ -32,19 +32,19 @@ begin
       for I in 1 .. Count loop
          declare
             Query  : constant String := Ada.Command_Line.Argument (I);
-	    Result : Search.Results.Result_Vector;
+	         Result : Search.Results.Result_Vector;
          begin
-            Indexer.Search (Query, Analyzer, Tokenizer, Result);
-	    for Item of Result loop
-	       declare
-		  Doc   : Search.Documents.Document_Type;
-		  Field : Search.Fields.Field_Type;
-	       begin
-		  Indexer.Load (Doc, Item.Doc_Id);
-		  Field := Doc.Get_Field ("path");
-		  Put_Line (Search.Fields.Get_Value (Field));
-	       end;
-	    end loop;
+            Indexer.Find (Query, Analyzer, Tokenizer, Result);
+	         for Item of Result loop
+	            declare
+		            Doc   : Search.Documents.Document_Type;
+		            Field : Search.Fields.Field_Type;
+	            begin
+		            Indexer.Load (Doc, Item.Doc_Id);
+		            Field := Doc.Get_Field ("path");
+		            Ada.Text_IO.Put_Line (Search.Fields.Get_Value (Field));
+	            end;
+	         end loop;
          end;
       end loop;
    end;
