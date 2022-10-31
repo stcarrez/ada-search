@@ -21,6 +21,8 @@ with Search.Fields;
 with Search.Tokenizers;
 with Search.Documents;
 with Search.Analyzers;
+with Search.Positions;
+with Search.Results;
 package Search.Indexers is
 
    type Indexer_Type is limited new Ada.Finalization.Limited_Controlled with private;
@@ -47,6 +49,23 @@ package Search.Indexers is
                         Document : in out Search.Documents.Document_Type'Class;
                         Field    : in Search.Fields.Field_Type;
                         Token    : in String) is null;
+
+   procedure Find (Indexer   : in out Indexer_Type;
+                   Query     : in String;
+                   Analyzer  : in out Search.Analyzers.Analyzer_Type'Class;
+                   Tokenizer : in out Search.Tokenizers.Tokenizer_Type'Class;
+                   Results   : in out Search.Results.Result_Vector);
+
+   procedure Find (Indexer : in out Indexer_Type;
+                   Token   : in String;
+                   Collect : not null access
+                     procedure (Doc    : in Documents.Document_Identifier_Type;
+                                Field  : in Fields.Field_Type;
+                                Pos    : in Positions.Position_Type)) is null;
+
+   procedure Load (Indexer : in out Indexer_Type;
+                   Doc     : in out Search.Documents.Document_Type'Class;
+                   Id      : in Search.Documents.Document_Identifier_Type) is null;
 
 private
 
