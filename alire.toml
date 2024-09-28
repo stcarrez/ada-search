@@ -1,0 +1,32 @@
+description = "Ada Search Library"
+name = "search"
+version = "0.1.0"
+licenses = "Apache-2.0"
+authors = ["Stephane.Carrez@gmail.com"]
+maintainers = ["Stephane.Carrez@gmail.com"]
+maintainers-logins = ["stcarrez"]
+project-files = ["search.gpr"]
+tags = ["web", "expression", "expander", "parser"]
+website = "https://gitlab.com/stcarrez/ada-search"
+long-description = """
+
+Ada Search is a search engine written in Ada and heavily inspired from the Java
+[Lucene](https://lucene.apache.org) search engine.
+
+"""
+
+[[depends-on]]
+utilada = "^2.7.0"
+ado = "^2.4.0"
+simple_components = "*"
+stemmer = "*"
+
+[gpr-externals]
+SEARCH_BUILD = ["distrib", "debug", "optimize", "profile", "coverage"]
+SEARCH_LIBRARY_TYPE = ["relocatable", "static", "static-pic"]
+
+[configuration]
+disabled = true
+
+[[pins]]
+stemmer = { url="https://gitlab.com/stcarrez/ada-stemmer.git" }

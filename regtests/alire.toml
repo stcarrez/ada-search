@@ -1,0 +1,20 @@
+description = "Ada Search unit tests"
+tags = ["web", "servlet", "http", "json"]
+name = "search_tests"
+version = "0.1.1"
+licenses = "Apache-2.0"
+authors = ["Stephane.Carrez@gmail.com"]
+maintainers = ["Stephane.Carrez@gmail.com"]
+maintainers-logins = ["stcarrez"]
+project-files = ["search_tests.gpr"]
+website = "https://gitlab.com/stcarrez/ada-servlet"
+
+[[depends-on]]
+search = "*"
+utilada_unit = "^2.6.0"
+
+[configuration]
+disabled = true
+
+[[pins]]
+search = { path = '..' }
