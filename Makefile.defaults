@@ -1,20 +1,29 @@
 ifndef MAKEFILE_DEFAULTS
 MAKEFILE_DEFAULTS=1
 
+# Define how to build the project: distrib, debug, optimize, coverage, profile
+BUILD?=distrib
+
+# Enable the build of shared libraries: yes, no
+BUILDS_SHARED?=no
+
+# The installation prefix for the project
+PREFIX?=/usr/local
+
 # You may edit this makefile as long as you keep these original 
 # target names defined.
-BUILD?=distrib
 GNATMAKE?=gprbuild
 GNATCLEAN?=gnatclean
 GPRINSTALL?=gprinstall
 INSTALL?=install
-DYNAMO?=dynamo
+PANDOC?=$(shell which pandoc 2>/dev/null)
+DYNAMO?=$(shell which dynamo 2>/dev/null)
 PROCESSORS?=1
 MKDIR?=mkdir
 CP?=cp
 LN?=ln -s
-
-BUILDS_SHARED?=no
+ALR?=alr --non-interactive
+BUILD_COMMAND?=$(ALR) build --
 
 ifeq (${OS},Windows_NT)
 LIBEXT?=dll
@@ -26,7 +35,7 @@ endif
 
 srcdir ?= .
 top_builddir ?= .
-prefix ?= /usr/local
+prefix ?= $(PREFIX)
 exec_prefix ?= ${prefix}
 top_builddir ?= .
 
@@ -37,87 +46,81 @@ libdir?=${prefix}/${infix_lib}
 alidir?=${prefix}/${infix_ali}
 samplesdir?=${prefix}/share/doc/${docdir}
 dynamodir=${prefix}/share/dynamo
+aliredir=${prefix}/alire-index
 
-MAKE_ARGS += -XBUILD=$(BUILD) -XPROCESSORS=$(PROCESSORS)
+MAKE_ARGS +=
 
 build:: all
 
 ifeq ($(BUILDS_SHARED),yes)
 all::     static shared build-test
-install:: uninstall install-shared install-static install-info
+install:: uninstall install-shared install-static
 else
 all::     static build-test
-install:: uninstall install-static install-info
+install:: uninstall install-static
 endif
 
 static::
 shared::
 install-data::
 
-# Not intended for manual invocation.
-# Invoked if automatic builds are enabled.
-# Analyzes only on those sources that have changed.
-# Does not build executables.
-autobuild:
-	$(GNATMAKE) $(MAKE_ARGS) -gnatc -c -k  -P "$(GPRPATH)"
-
 # Clean, then build executables for all mains defined by the project.
 rebuild: clean all
 
-# Check *all* sources for errors, even those not changed.
-# Does not build executables.
-analyze:
-	$(GNATMAKE) $(MAKE_ARGS) -f  -gnatc -c -k  -P "$(GPRPATH)"
-
-# Clean root project and all imported projects too.
-clean_tree:
-	$(GNATCLEAN) -q -P "$(GPRPATH)" -r
-
 # Clean the root project of all build products.
 clean::
-	-rm -rf lib obj bin autom4te.cache $(CLEAN_FILES)
+	-rm -rf lib obj bin $(CLEAN_FILES)
 	-rm -rf regtests/result
 
 dist-clean:: clean
-	-rm -f *.log *~ config.status Makefile.conf
+	-rm -f *.log *~ Makefile.conf
 
 doc::
+ifneq (${DYNAMO},)
 	$(DYNAMO) build-doc -markdown wiki
+endif
 
 dist::
 	rm -f $(DIST_FILE)
 	git archive -o $(DIST_FILE) --prefix=$(DIST_DIR)/ HEAD
 
-install-info:
-	@echo "Environment setup:"
-	@echo "  export ADA_PROJECT_PATH=${projectdir}:$$ADA_PROJECT_PATH"
-
 define ada_library
-  static:: setup
-	$(GNATMAKE) $(GPRFLAGS) -p -P$(2)$(1).gpr $(STATIC_MAKE_ARGS)
+static:: lib-setup
+	cd $(2) && $(BUILD_COMMAND) $(STATIC_MAKE_ARGS)
 
   install-static::
-	$(GPRINSTALL) -p -f --prefix=$(DESTDIR)${prefix} \
+	cd $(2) && $(ALR) exec -- $(GPRINSTALL) -p -f --prefix=$(DESTDIR)${prefix} \
           $(STATIC_MAKE_ARGS) \
-          --build-name=static $(2)$(1).gpr  
+          --build-name=static $(1).gpr  
 
-  setup:: obj/$(1)/static
+  lib-setup:: obj/$(1)/static
 
   obj/$(1)/static:
 	$(MKDIR) -p obj/$(1)/static
 
 ifeq ($(BUILDS_SHARED),yes)
-  shared:: setup
-	$(GNATMAKE) $(GPRFLAGS) -p -P$(2)$(1).gpr $(SHARED_MAKE_ARGS)
+  shared:: lib-setup
+	cd $(2) && $(BUILD_COMMAND) $(SHARED_MAKE_ARGS)
 
   install-shared::
-	$(GPRINSTALL) -p -f --prefix=$(DESTDIR)${prefix} \
+	cd $(2) && $(ALR) exec -- $(GPRINSTALL) -p -f --prefix=$(DESTDIR)${prefix} \
           $(SHARED_MAKE_ARGS) \
-          --build-name=relocatable $(2)$(1).gpr
+          --build-name=relocatable $(1).gpr
 endif
 
   uninstall::
-	-$(GPRINSTALL) --uninstall -q -f --prefix=$(DESTDIR)${prefix} $(MAKE_ARGS) $(1).gpr
+	-cd $(2) && $(ALR) exec -- $(GPRINSTALL) --uninstall -q -f --prefix=$(DESTDIR)${prefix} $(MAKE_ARGS) $(1).gpr
+
+endef
+
+define ada_program
+  all:: lib-setup
+	$(GNATMAKE) $(GPRFLAGS) -p -P$(2)$(1).gpr $(STATIC_MAKE_ARGS)
+
+  lib-setup:: obj/$(1)/static
+
+  obj/$(1)/static:
+	$(MKDIR) -p obj/$(1)/static
 
 endef
 
@@ -158,7 +161,6 @@ endef
 
 define awa_plugin
 
-$(eval $(call ada_library,$(strip $(1)),$($(1)_dir)/))
 $(eval $(call awa_install_plugin,$(strip $(1))))
 
 ifdef $(1)_dynamo
@@ -172,6 +174,38 @@ clean::
 
 endef
 
+define alire_publish
+  publish::
+	-rm -f $(aliredir)/$(2)/$(3)
+	cd $(1) && alr -f --no-tty publish --skip-submit
+	mkdir -p $(aliredir)/index/$(2)
+	cp $(1)/alire/releases/$(3) $(aliredir)/index/$(2)/$(3)
+
+endef
+
+define pandoc_build
+
+ifneq (, ${PANDOC})
+
+doc::  docs/$(1).pdf docs/$(1).html
+ifneq (${DYNAMO},)
+	$(DYNAMO) build-doc -markdown wiki
+endif
+
+docs/$(1).pdf:  force
+ifneq (${DYNAMO},)
+	$(DYNAMO) build-doc -pandoc docs
+	$(3)
+endif
+	cd docs && $(PANDOC) $(DOC_OPTIONS) -o $(1).pdf --template=./eisvogel.tex $(2)
+
+docs/$(1).html: docs/$(1).pdf force
+	cd docs && $(PANDOC) $(HTML_OPTIONS) -o $(1).html $(2)
+
+endif
+
+endef
+
 force:
 
 build-test::
@@ -181,3 +215,14 @@ uninstall::
 install-static::
 
 endif
+
+ifdef DESTDIR
+
+.NOTPARALLEL:
+
+endif
+
+setup::
+	echo "BUILD=$(BUILD)" > Makefile.conf
+	echo "PREFIX=$(prefix)" >> Makefile.conf
+	echo "BUILDS_SHARED=$(BUILDS_SHARED)" >> Makefile.conf
