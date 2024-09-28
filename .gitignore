@@ -3,11 +3,7 @@
 /obj
 /lib
 /cover
-autom4te.cache
-config.status
 Makefile.conf
-search_tests.gpr
-search.gpr
 *.txt
 *~
 *.log
